@@ -29,18 +29,17 @@ jobs:
 
     - name: Install Android SDK
       run: |
-        sudo mkdir -p /home/runner/android-sdk/cmdline-tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip
-        unzip -q commandlinetools-linux-9123335_latest.zip -d /home/runner/android-sdk/cmdline-tools
-        mv /home/runner/android-sdk/cmdline-tools/cmdline-tools /home/runner/android-sdk/cmdline-tools/tools
-
-        yes | /home/runner/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/home/runner/android-sdk --licenses
-        yes | /home/runner/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/home/runner/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-
-        echo "ANDROID_HOME=/home/runner/android-sdk" >> $GITHUB_ENV
-        echo "ANDROID_SDK_ROOT=/home/runner/android-sdk" >> $GITHUB_ENV
-        echo "/home/runner/android-sdk/platform-tools" >> $GITHUB_PATH
-        echo "/home/runner/android-sdk/build-tools/33.0.2" >> $GITHUB_PATH
+        sudo mkdir -p /opt/android-sdk/cmdline-tools
+        cd /opt/android-sdk/cmdline-tools
+        sudo wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip
+        sudo unzip -q commandlinetools-linux-9123335_latest.zip
+        sudo mv cmdline-tools tools
+        yes | sudo /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk --licenses
+        yes | sudo /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+        echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=/opt/android-sdk" >> $GITHUB_ENV
+        echo "/opt/android-sdk/platform-tools" >> $GITHUB_PATH
+        echo "/opt/android-sdk/build-tools/33.0.2" >> $GITHUB_PATH
 
     - name: Build APK
       run: |
