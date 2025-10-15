@@ -1,0 +1,51 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y libncurses5 git zip unzip openjdk-11-jdk python3-pip
+
+    - name: Install Buildozer
+      run: |
+        pip install --upgrade pip
+        pip install cython virtualenv
+        pip install buildozer
+
+    - name: Install Android SDK
+      run: |
+        sudo apt-get install -y wget
+        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        unzip commandlinetools-linux-8512546_latest.zip -d $HOME/android-sdk/cmdline-tools
+        mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/tools
+        yes | $HOME/android-sdk/cmdline-tools/tools/bin/sdkmanager --licenses
+        $HOME/android-sdk/cmdline-tools/tools/bin/sdkmanager "platform-tools" "build-tools;31.0.0" "platforms;android-31"
+
+    - name: Build APK
+      env:
+        ANDROIDSDK: ${{ github.workspace }}/../android-sdk
+        ANDROIDNDK: ${{ github.workspace }}/.buildozer/android/platform/android-ndk-r23b
+      run: |
+        buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: Slingo-APK
+        path: bin/*.apk
