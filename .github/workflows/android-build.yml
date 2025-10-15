@@ -8,42 +8,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
+    - uses: actions/checkout@v4
 
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y git zip unzip openjdk-11-jdk libffi-dev libncurses5-dev python3-pip
+        sudo apt install -y git zip unzip openjdk-11-jdk python3-pip libffi-dev libssl-dev
 
     - name: Install Buildozer
       run: |
         pip install --upgrade pip
-        pip install cython virtualenv
-        pip install buildozer
+        pip install cython virtualenv buildozer
 
     - name: Install Android SDK
       run: |
         sudo mkdir -p /opt/android-sdk/cmdline-tools
         cd /opt/android-sdk/cmdline-tools
-        sudo wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip
-        sudo unzip -q commandlinetools-linux-9123335_latest.zip
+        sudo wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmdline-tools.zip
+        sudo unzip -q cmdline-tools.zip
+        sudo rm cmdline-tools.zip
         sudo mv cmdline-tools tools
         yes | sudo /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk --licenses
         yes | sudo /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
         echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=/opt/android-sdk" >> $GITHUB_ENV
         echo "/opt/android-sdk/platform-tools" >> $GITHUB_PATH
         echo "/opt/android-sdk/build-tools/33.0.2" >> $GITHUB_PATH
 
     - name: Build APK
-      run: |
-        buildozer android debug
+      run: buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
