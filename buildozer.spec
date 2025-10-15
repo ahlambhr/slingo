@@ -35,5 +35,8 @@ android.debug = 1
 [buildozer]
 log_level = 2
 warn_on_root = 1
-android.sdkmanager_path = /home/runner/android-sdk/cmdline-tools/tools/bin/sdkmanager
+android.sdk_path = /opt/android-sdk
+android.sdkmanager_path = /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager
+p4a.allow_replace_dist = True
+
 
