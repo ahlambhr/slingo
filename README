@@ -1,0 +1,30 @@
+activate env : myenv\scripts\activate
+
+Summary of Key Changes
+
+Action Buttons (“ابدأ الترجمة” / “ابدأ اللعب”)
+
+Increased corner radius from radius=[28] to radius=[32] for a more rounded look.
+
+Bumped up font size from 20 → 24 and set bold=True so the text is thicker and larger.
+
+Daily Sign Container
+
+Increased the white‐card’s and its shadow’s radius from 24 → 32 for more curvature.
+
+Enlarged the “الإشارة الوضيحة” font from 22 → 26, kept bold=True.
+
+Enlarged the “كلمة: {word}” font from 20 → 24, set bold=True.
+
+For the orange right panel, increased its corner radii from (0,0),(24,24),(24,24),(0,0) → (0,0),(32,32),(32,32),(0,0).
+
+Enlarged the “👁️\nشاهد الإشارة” font from 20 → 24, set bold=True.
+
+Feel free to tweak the new 32 radius values or font sizes if you want even more rounding or larger text. This update ensures that the action buttons and daily sign boxes are noticeably more rounded, and that their labels appear bolder and easier to read.
+
+
+
+
+
+
+

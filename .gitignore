@@ -1,0 +1,28 @@
+# Virtual environments
+myenv/
+venv/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Datasets and large media
+dataset/
+clean_dataset/
+KArSL/
+datapics/
+datavideos/
+*.pt
+*.h5
+*.mp4
+*.avi
+*.zip
+*.tar.gz
+*.png
+*.jpg
+*.jpeg
+
+# Build folders
+build/
+dist/

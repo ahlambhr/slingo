@@ -1,0 +1,34 @@
+[
+  {
+    "word": "بيت",
+    "image": "C:\\house.png"
+  },
+  {
+    "word": "سيارة",
+    "image": "C:\\classic-car.png"
+  },
+  {
+    "word": "شجرة",
+    "image": "C:\\tree.png"
+  },
+  {
+    "word": "شمعة",
+    "image": "C:\\candle.png"
+  },
+  {
+    "word": "وردة",
+    "image": "C:\\flower.png"
+  },
+  {
+    "word": "مفتاح",
+    "image": "C:\\key.png"
+  },
+  {
+    "word": "كرسي",
+    "image": "C:\\sit.png"
+  },
+  {
+    "word": "شمس",
+    "image": "C:\\happy.png"
+  }
+]
