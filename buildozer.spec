@@ -42,7 +42,4 @@ include_patterns = screens/*, ui/*, fonts/*, models/*, *.json
 log_level = 2
 warn_on_root = 1
 
-[app]
-# Prevent Android crash from missing font
-android.allow_custom_themes = True
 
