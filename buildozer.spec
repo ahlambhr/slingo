@@ -7,39 +7,28 @@ source.include_exts = py,kv,png,jpg,ttf,json
 version = 0.1
 orientation = portrait
 fullscreen = 0
-
-# Main Python file
 entrypoint = main.py
 
-# Permissions
+requirements = python3,kivy,opencv-python,numpy,pillow,arabic_reshaper,python-bidi,pytesseract,pdf2image,tensorflow,scikit-learn,mediapipe,SpeechRecognition
 android.permissions = CAMERA, RECORD_AUDIO, INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
-# Requirements
-requirements = python3,kivy,opencv-python,numpy,pillow,arabic_reshaper,python-bidi,pytesseract,pdf2image,tensorflow,scikit-learn,mediapipe,SpeechRecognition
-
-# Android specific settings
-android.api = 31
+# ✅ Force stable Android SDK + Build-Tools
+android.api = 33
 android.minapi = 21
+android.build_tools_version = 33.0.2
+android.sdk_path = $HOME/android-sdk
 android.ndk = 23b
 android.archs = arm64-v8a, armeabi-v7a
-android.sdk = 20
 
-# Add fonts folder
-android.presplash_color = #FFFFFF
-android.allow_backup = True
-android.add_src = fonts
+# Assets
+include_patterns = screens/*, ui/*, fonts/*, models/*, *.json
 
-# Icon (you can add later)
+# Icon (add later)
 icon.filename = %(source.dir)s/data/icon.png
 
-# Code signing disabled for now
+# Debug mode build
 android.debug = 1
-
-# Include these folders
-include_patterns = screens/*, ui/*, fonts/*, models/*, *.json
 
 [buildozer]
 log_level = 2
 warn_on_root = 1
-
-
