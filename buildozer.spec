@@ -16,7 +16,7 @@ android.permissions = CAMERA, RECORD_AUDIO, INTERNET, WRITE_EXTERNAL_STORAGE, RE
 android.api = 33
 android.minapi = 21
 android.build_tools_version = 33.0.2
-android.sdk_path = /home/runner/android-sdk
+android.sdk_path = /opt/android-sdk
 android.ndk = 23b
 android.archs = arm64-v8a, armeabi-v7a
 
