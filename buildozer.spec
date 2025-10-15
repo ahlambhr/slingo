@@ -16,7 +16,7 @@ android.permissions = CAMERA, RECORD_AUDIO, INTERNET, WRITE_EXTERNAL_STORAGE, RE
 android.api = 33
 android.minapi = 21
 android.build_tools_version = 33.0.2
-android.sdk_path = $HOME/android-sdk
+android.sdk_path = /home/runner/android-sdk
 android.ndk = 23b
 android.archs = arm64-v8a, armeabi-v7a
 
@@ -35,3 +35,5 @@ android.debug = 1
 [buildozer]
 log_level = 2
 warn_on_root = 1
+android.sdkmanager_path = /home/runner/android-sdk/cmdline-tools/tools/bin/sdkmanager
+
