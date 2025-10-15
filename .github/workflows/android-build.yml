@@ -19,7 +19,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y libncurses5 git zip unzip openjdk-11-jdk python3-pip
+        sudo apt install -y libncurses5-dev libffi-dev git zip unzip openjdk-11-jdk python3-pip
 
     - name: Install Buildozer
       run: |
