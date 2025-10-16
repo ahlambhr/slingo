@@ -12,32 +12,40 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-11-jdk python3-pip \
-            build-essential pkg-config zlib1g-dev libffi-dev libssl-dev \
-            libncurses5-dev libtinfo5 libgl1-mesa-dev libgles2-mesa liblzma-dev
+          sudo apt install -y \
+            git zip unzip libffi-dev libssl-dev \
+            openjdk-11-jdk \
+            build-essential pkg-config \
+            zlib1g-dev libncurses5-dev libtinfo5 \
+            libgl1-mesa-dev libgles2-mesa \
+            liblzma-dev libjpeg-dev libpng-dev
 
       - name: Install Buildozer
         run: |
-          pip install --upgrade pip
-          pip install cython virtualenv buildozer
+          python -m pip install --upgrade pip
+          # Pin Cython to avoid random p4a build failures
+          pip install "cython<3.0" virtualenv
+          pip install "buildozer>=1.5.0" "python-for-android>=2024.06.03"
 
       - name: Install Android SDK + NDK
+        env:
+          SDK_ROOT: /opt/android-sdk
         run: |
-          sudo mkdir -p /opt/android-sdk/cmdline-tools
-          sudo chown -R $USER:$USER /opt/android-sdk
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
-          unzip -q cmdtools.zip -d /opt/android-sdk/cmdline-tools
-          mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/tools
-          yes | /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk --licenses
-          yes | /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk \
-            "platform-tools" "platforms;android-31" "build-tools;33.0.2" "ndk;23.1.7779620"
+          sudo mkdir -p $SDK_ROOT/cmdline-tools
+          sudo chown -R $USER:$USER $SDK_ROOT
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
+          unzip -q cmdtools.zip -d $SDK_ROOT/cmdline-tools
+          mv $SDK_ROOT/cmdline-tools/cmdline-tools $SDK_ROOT/cmdline-tools/tools
+          yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT --licenses
+          yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT \
+            "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.1.7779620"
 
       - name: Build APK (debug)
         env:
@@ -46,7 +54,7 @@ jobs:
           ANDROID_SDK_ROOT: /opt/android-sdk
           ANDROIDNDK: /opt/android-sdk/ndk/23.1.7779620
           ANDROID_NDK_HOME: /opt/android-sdk/ndk/23.1.7779620
-          PATH: /opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/33.0.2:$PATH
+          PATH: /opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/33.0.2:${{ env.PATH }}
         run: |
           buildozer android debug
 
