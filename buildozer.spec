@@ -3,19 +3,20 @@ title = Slingo
 package.name = slingo
 package.domain = com.ahlambhr
 source.dir = .
-source.include_exts = py,kv,png,jpg,ttf,json,txt
+source.include_exts = py,kv,png,jpg,jpeg,ttf,json,txt,mp3,wav,xml
 version = 0.1
 orientation = portrait
 fullscreen = 0
 entrypoint = main.py
 
-# Dependencies
+# ---- Python requirements ----
+# (This matches your project stack: Kivy + TF + OpenCV + OCR + Speech + MediaPipe)
 requirements = python3,kivy,opencv-python,numpy,pillow,arabic_reshaper,python-bidi,pytesseract,pdf2image,tensorflow,scikit-learn,mediapipe,SpeechRecognition
 
-# Permissions
+# ---- Android permissions ----
 android.permissions = CAMERA, RECORD_AUDIO, INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
-# Android SDK/NDK setup
+# ---- Android SDK/NDK configuration ----
 android.api = 31
 android.minapi = 21
 android.ndk = 23b
@@ -24,10 +25,10 @@ android.sdk_path = /opt/android-sdk
 android.accept_sdk_license = True
 android.build_tools_version = 33.0.2
 
-# Assets
+# ---- Packaging ----
 include_patterns = fonts/*,screens/*,ui/*,models/*,*.json
 
-# Debug APK only
+# Build a debug APK (what the workflow will produce)
 android.debug = True
 
 [buildozer]
