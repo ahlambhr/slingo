@@ -11,27 +11,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      # Use official Java setup so sdkmanager runs with Java 17
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: '3.10'
 
       - name: Install system dependencies
         run: |
           sudo apt update
           sudo apt install -y \
-            git zip unzip libffi-dev libssl-dev \
+            git zip unzip \
             build-essential pkg-config \
-            zlib1g-dev libncurses5-dev libtinfo5 \
+            libffi-dev libssl-dev zlib1g-dev \
+            libncurses5-dev libtinfo5 \
             libgl1-mesa-dev libgles2-mesa \
             liblzma-dev libjpeg-dev libpng-dev
 
-      - name: Install Java 17 (Required for new Android SDK)
-        run: |
-          sudo apt install -y openjdk-17-jdk
-          java -version
-
-      - name: Install Buildozer
+      - name: Install Buildozer & p4a
         run: |
           python -m pip install --upgrade pip
           pip install "cython<3.0" virtualenv
@@ -41,17 +44,20 @@ jobs:
       - name: Install Android SDK + NDK
         env:
           SDK_ROOT: /opt/android-sdk
+          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
         run: |
           sudo mkdir -p $SDK_ROOT/cmdline-tools
           sudo chown -R $USER:$USER $SDK_ROOT
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
           unzip -q cmdtools.zip -d $SDK_ROOT/cmdline-tools
           mv $SDK_ROOT/cmdline-tools/cmdline-tools $SDK_ROOT/cmdline-tools/tools
+
+          # Accept licenses and install components with Java 17
           yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT --licenses
           yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT \
             "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.1.7779620"
 
-      - name: Build APK
+      - name: Build APK (debug)
         env:
           ANDROIDSDK: /opt/android-sdk
           ANDROID_HOME: /opt/android-sdk
