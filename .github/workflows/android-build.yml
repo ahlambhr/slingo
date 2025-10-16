@@ -19,36 +19,45 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y zip unzip openjdk-11-jdk python3-pip libffi-dev libssl-dev \
-            git build-essential pkg-config zlib1g-dev libncurses5-dev libtinfo5 \
+          sudo apt install -y \
+            git zip unzip openjdk-11-jdk python3-pip \
+            build-essential pkg-config zlib1g-dev \
+            libffi-dev libssl-dev libncurses5-dev libtinfo5 \
             libgl1-mesa-dev libgles2-mesa liblzma-dev
 
       - name: Install Buildozer
         run: |
           pip install --upgrade pip
-          pip install buildozer cython virtualenv
+          pip install cython virtualenv buildozer
 
-      - name: Install Android SDK and NDK
+      - name: Install Android SDK + NDK (r23b) + Build-Tools
         run: |
-          sudo mkdir -p /opt/android-sdk
-          sudo mkdir -p /opt/android-ndk
-          sudo chown -R $USER:$USER /opt/android-sdk /opt/android-ndk
+          # Prepare SDK root
+          sudo mkdir -p /opt/android-sdk/cmdline-tools
+          sudo chown -R $USER:$USER /opt/android-sdk
 
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
-          unzip cmdtools.zip -d /opt/android-sdk/cmdline-tools
+          # Commandline tools (new layout requires "tools" folder under cmdline-tools)
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
+          unzip -q cmdtools.zip -d /opt/android-sdk/cmdline-tools
           mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/tools
 
+          # Accept licenses and install required packages
           yes | /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk --licenses
           yes | /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk \
             "platform-tools" "platforms;android-31" "build-tools;33.0.2" "ndk;23.1.7779620"
 
-      - name: Build APK
+      - name: Build APK (debug)
         env:
           ANDROIDSDK: /opt/android-sdk
+          ANDROID_HOME: /opt/android-sdk
+          ANDROID_SDK_ROOT: /opt/android-sdk
           ANDROIDNDK: /opt/android-sdk/ndk/23.1.7779620
+          ANDROID_NDK_HOME: /opt/android-sdk/ndk/23.1.7779620
           PATH: /opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/33.0.2:$PATH
         run: |
-          buildozer init | true
+          # Ensure spec exists (no-op if already present)
+          test -f buildozer.spec || buildozer init
+          # Build debug APK
           buildozer android debug
 
       - name: Upload APK
