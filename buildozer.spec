@@ -9,27 +9,36 @@ orientation = portrait
 fullscreen = 0
 entrypoint = main.py
 
-# ---- Python requirements ----
-# (This matches your project stack: Kivy + TF + OpenCV + OCR + Speech + MediaPipe)
-requirements = python3,kivy,opencv-python,numpy,pillow,arabic_reshaper,python-bidi,pytesseract,pdf2image,tensorflow,scikit-learn,mediapipe,SpeechRecognition
+# ---- Python requirements (Android-safe) ----
+# Keep this lean to ensure successful builds.
+# If you need requests for APIs, it’s already included via 'requests'.
+requirements = python3,kivy,android,pyjnius,plyer,requests,certifi,chardet,idna,urllib3,numpy,pillow
 
 # ---- Android permissions ----
-android.permissions = CAMERA, RECORD_AUDIO, INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
+# Camera & mic for future features; Internet for APIs; storage for reading/writing JSON/media
+android.permissions = CAMERA, RECORD_AUDIO, INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, FOREGROUND_SERVICE
 
-# ---- Android SDK/NDK configuration ----
-android.api = 31
+# ---- Include your assets / data ----
+# These must match your repo
+include_patterns = fonts/*,screens/*,ui/*,models/*,*.json
+
+# ---- SDK/NDK / API Levels ----
+android.api = 33
 android.minapi = 21
 android.ndk = 23b
-android.archs = arm64-v8a, armeabi-v7a
-android.sdk_path = /opt/android-sdk
+android.archs = arm64-v8a,armeabi-v7a
 android.accept_sdk_license = True
 android.build_tools_version = 33.0.2
 
-# ---- Packaging ----
-include_patterns = fonts/*,screens/*,ui/*,models/*,*.json
+# ---- Java options (stable defaults) ----
+# (you can uncomment and tweak if you need)
+# android.add_jars =
 
-# Build a debug APK (what the workflow will produce)
+# Build a debug APK (what the workflow outputs)
 android.debug = True
+
+# ---- Kivy graphics / window tweaks (optional) ----
+# kivy.require = 2.3.0
 
 [buildozer]
 log_level = 2
