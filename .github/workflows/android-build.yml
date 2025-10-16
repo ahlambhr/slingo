@@ -16,19 +16,19 @@ jobs:
       with:
         python-version: "3.10"
 
-    - name: Install dependencies
+    - name: Install system deps
       run: |
         sudo apt update
         sudo apt install -y zip unzip openjdk-11-jdk python3-pip libffi-dev libssl-dev \
           git build-essential pkg-config libglu1-mesa libgles2-mesa libsdl2-dev \
-          autoconf libtool libffi-dev libssl-dev libxml2-dev libxslt1-dev zlib1g-dev
+          autoconf libtool zlib1g-dev
 
     - name: Install Buildozer
       run: |
-        pip install --upgrade pip Cython virtualenv
-        pip install buildozer
+        pip install --upgrade pip
+        pip install cython virtualenv buildozer
 
-    - name: Install Android SDK + cmdline-tools
+    - name: Install Android SDK
       run: |
         sudo mkdir -p /opt/android-sdk/cmdline-tools
         cd /opt/android-sdk/cmdline-tools
@@ -37,16 +37,15 @@ jobs:
         yes | sudo /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk --licenses
         yes | sudo /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk "platform-tools" "platforms;android-31" "build-tools;33.0.2"
 
-    - name: Build APK
+    - name: Build with Buildozer
       env:
         ANDROIDSDK: /opt/android-sdk
         ANDROID_HOME: /opt/android-sdk
         ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r23b
-      run: |
-        buildozer android debug
+      run: buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v3
       with:
-        name: Slingo-App
+        name: Slingo-APK
         path: bin/*.apk
