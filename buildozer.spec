@@ -27,6 +27,8 @@ android.archs = arm64-v8a, armeabi-v7a
 
 # Buildozer/p4a will use the SDK we install in the workflow
 android.sdk_path = /opt/android-sdk
+android.ndk_path = /home/runner/.buildozer/android/platform/android-ndk-r23b
+p4a.local_recipes = 
 android.accept_sdk_license = True
 
 # ---- Assets to include ----
