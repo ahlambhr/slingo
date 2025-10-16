@@ -5,71 +5,48 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: "3.10"
 
-    - name: Install system deps
+    - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y git zip unzip openjdk-11-jdk python3-pip libffi-dev libssl-dev libncurses5-dev
+        sudo apt install -y zip unzip openjdk-11-jdk python3-pip libffi-dev libssl-dev \
+          git build-essential pkg-config libglu1-mesa libgles2-mesa libsdl2-dev \
+          autoconf libtool libffi-dev libssl-dev libxml2-dev libxslt1-dev zlib1g-dev
 
     - name: Install Buildozer
       run: |
-        python -m pip install --upgrade pip
-        pip install cython virtualenv buildozer
+        pip install --upgrade pip Cython virtualenv
+        pip install buildozer
 
-    - name: Install Android SDK (cmdline-tools) and accept licenses
+    - name: Install Android SDK + cmdline-tools
       run: |
-        # Install under /opt with sudo permissions
         sudo mkdir -p /opt/android-sdk/cmdline-tools
         cd /opt/android-sdk/cmdline-tools
+        sudo wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip
+        sudo unzip commandlinetools-linux-9123335_latest.zip -d latest
+        yes | sudo /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk --licenses
+        yes | sudo /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk "platform-tools" "platforms;android-31" "build-tools;33.0.2"
 
-        # Download and unpack cmdline-tools
-        sudo wget -q https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmdline-tools.zip
-        sudo unzip -q cmdline-tools.zip
-        sudo rm -f cmdline-tools.zip
-
-        # Move to canonical "tools" dir expected by sdkmanager
-        sudo mv cmdline-tools tools
-
-        # Accept licenses and install platform-tools + API 31 + build-tools 33.0.2
-        yes | sudo /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk --licenses
-        yes | sudo /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk "platform-tools" "platforms;android-31" "build-tools;33.0.2"
-
-        # Create legacy path for older checks looking in /tools/bin
-        sudo mkdir -p /opt/android-sdk/tools/bin
-        if [ ! -e /opt/android-sdk/tools/bin/sdkmanager ]; then
-          sudo ln -s /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager /opt/android-sdk/tools/bin/sdkmanager
-        fi
-
-        # Make SDK visible to subsequent steps & Buildozer/p4a
-        echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
-        echo "ANDROID_SDK_ROOT=/opt/android-sdk" >> $GITHUB_ENV
-        echo "/opt/android-sdk/platform-tools" >> $GITHUB_PATH
-        echo "/opt/android-sdk/build-tools/33.0.2" >> $GITHUB_PATH
-
-        # Show installed pieces for debugging
-        ls -la /opt/android-sdk
-        ls -la /opt/android-sdk/cmdline-tools/tools/bin
-        /opt/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=/opt/android-sdk --list | head -n 50
-
-    - name: Build APK (debug)
+    - name: Build APK
       env:
-        ANDROID_SDK_ROOT: /opt/android-sdk
+        ANDROIDSDK: /opt/android-sdk
         ANDROID_HOME: /opt/android-sdk
+        ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r23b
       run: |
         buildozer android debug
 
     - name: Upload APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
-        name: Slingo-APK
+        name: Slingo-App
         path: bin/*.apk
