@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+      uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,9 +30,9 @@ jobs:
       - name: Install Buildozer
         run: |
           python -m pip install --upgrade pip
-          # Pin Cython to avoid random p4a build failures
           pip install "cython<3.0" virtualenv
-          pip install "buildozer>=1.5.0" "python-for-android>=2024.06.03"
+          pip install buildozer
+          pip install "python-for-android==2024.1.21"
 
       - name: Install Android SDK + NDK
         env:
@@ -47,7 +47,7 @@ jobs:
           yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT \
             "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.1.7779620"
 
-      - name: Build APK (debug)
+      - name: Build APK
         env:
           ANDROIDSDK: /opt/android-sdk
           ANDROID_HOME: /opt/android-sdk
