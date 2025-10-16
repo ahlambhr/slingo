@@ -19,7 +19,7 @@ requirements = python3,kivy,opencv-python,numpy,pillow,arabic_reshaper,python-bi
 android.permissions = CAMERA, RECORD_AUDIO, INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
 # ---- Android toolchain settings ----
-android.api = 31              # Target Android 12 (stable with TF)
+android.api = 31            
 android.minapi = 21
 android.build_tools_version = 33.0.2
 android.ndk = 23b
