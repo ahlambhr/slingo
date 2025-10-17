@@ -11,7 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Ensure sdkmanager uses Java 17 (required by newest cmdline-tools)
+      # Use Java 17 so sdkmanager works (fixes class file 61.0 error)
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -32,15 +32,17 @@ jobs:
             libffi-dev libssl-dev zlib1g-dev \
             libncurses5-dev libtinfo5 \
             libgl1-mesa-dev libgles2-mesa \
-            liblzma-dev libjpeg-dev libpng-dev
+            liblzma-dev libjpeg-dev libpng-dev \
+            autoconf automake libtool cmake patchelf
           git --version
 
-      - name: Install Buildozer & p4a
+      - name: Install Buildozer & python-for-android
         run: |
           python -m pip install --upgrade pip
           pip install "cython<3.0" virtualenv
           pip install buildozer
           pip install "python-for-android==2024.1.21"
+          buildozer --version
 
       - name: Install Android SDK + NDK
         env:
@@ -55,24 +57,37 @@ jobs:
           yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT \
             "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.1.7779620"
 
-      - name: Build APK (debug)
+      - name: Build APK (debug, verbose)
         run: |
-          # Export Android env vars
+          # Android env
           export ANDROIDSDK=/opt/android-sdk
           export ANDROID_HOME=$ANDROIDSDK
           export ANDROID_SDK_ROOT=$ANDROIDSDK
           export ANDROIDNDK=$ANDROIDSDK/ndk/23.1.7779620
           export ANDROID_NDK_HOME=$ANDROIDNDK
-          # IMPORTANT: keep existing PATH and append Android tools
           export PATH=$PATH:/opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/33.0.2
           # Sanity checks
           which git && git --version
-          which sdkmanager || true
           which buildozer
-          # Build
-          buildozer android debug
+          # Build with verbose logs
+          buildozer -v android debug
+
+      # Always collect logs to diagnose anything quickly
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-logs
+          path: |
+            .buildozer/buildozer.log
+            .buildozer/android/platform/*/*/*/logs/**/*
+            .buildozer/android/platform/*/build-*/logs/**/*
+            .buildozer/android/platform/build-*/logs/**/*
+            .buildozer/android/*.txt
+            .buildozer/android/**/*.log
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: slingo-apk
