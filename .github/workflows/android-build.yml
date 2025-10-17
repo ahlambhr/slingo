@@ -11,7 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Use official Java setup so sdkmanager runs with Java 17
+      # Ensure sdkmanager uses Java 17 (required by newest cmdline-tools)
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -33,6 +33,7 @@ jobs:
             libncurses5-dev libtinfo5 \
             libgl1-mesa-dev libgles2-mesa \
             liblzma-dev libjpeg-dev libpng-dev
+          git --version
 
       - name: Install Buildozer & p4a
         run: |
@@ -44,28 +45,31 @@ jobs:
       - name: Install Android SDK + NDK
         env:
           SDK_ROOT: /opt/android-sdk
-          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
         run: |
           sudo mkdir -p $SDK_ROOT/cmdline-tools
           sudo chown -R $USER:$USER $SDK_ROOT
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
           unzip -q cmdtools.zip -d $SDK_ROOT/cmdline-tools
           mv $SDK_ROOT/cmdline-tools/cmdline-tools $SDK_ROOT/cmdline-tools/tools
-
-          # Accept licenses and install components with Java 17
           yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT --licenses
           yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT \
             "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.1.7779620"
 
       - name: Build APK (debug)
-        env:
-          ANDROIDSDK: /opt/android-sdk
-          ANDROID_HOME: /opt/android-sdk
-          ANDROID_SDK_ROOT: /opt/android-sdk
-          ANDROIDNDK: /opt/android-sdk/ndk/23.1.7779620
-          ANDROID_NDK_HOME: /opt/android-sdk/ndk/23.1.7779620
-          PATH: /opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/33.0.2:${{ env.PATH }}
         run: |
+          # Export Android env vars
+          export ANDROIDSDK=/opt/android-sdk
+          export ANDROID_HOME=$ANDROIDSDK
+          export ANDROID_SDK_ROOT=$ANDROIDSDK
+          export ANDROIDNDK=$ANDROIDSDK/ndk/23.1.7779620
+          export ANDROID_NDK_HOME=$ANDROIDNDK
+          # IMPORTANT: keep existing PATH and append Android tools
+          export PATH=$PATH:/opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/33.0.2
+          # Sanity checks
+          which git && git --version
+          which sdkmanager || true
+          which buildozer
+          # Build
           buildozer android debug
 
       - name: Upload APK
