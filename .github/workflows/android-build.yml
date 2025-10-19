@@ -7,87 +7,34 @@ jobs:
   build:
     runs-on: ubuntu-22.04
 
+    # Use the prebuilt Buildozer image (Android SDK/NDK already inside)
+    container:
+      image: kivy/buildozer:stable
+      options: --privileged
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Java 17 is required by new Android cmdline-tools/Gradle
-      - name: Set up Java 17
-        id: java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install system dependencies
+      - name: Install essentials inside container
         run: |
-          sudo apt update
-          sudo apt install -y \
-            git zip unzip \
-            build-essential pkg-config \
-            libffi-dev libssl-dev zlib1g-dev \
-            libncurses5-dev libtinfo5 \
-            libgl1-mesa-dev libgles2-mesa \
-            liblzma-dev libjpeg-dev libpng-dev \
-            autoconf automake libtool cmake patchelf
+          apt-get update
+          apt-get install -y git zip unzip
           git --version
-
-      - name: Install Buildozer & python-for-android
-        run: |
-          python -m pip install --upgrade pip
-          # Pin toolchain pieces that sometimes break CI
-          pip install "Cython<3.0" "wheel>=0.41" "setuptools<70" "packaging<24"
-          pip install buildozer
-          pip install "python-for-android==2024.1.21"
+          python3 --version
           buildozer --version
-
-      - name: Install Android SDK + NDK
-        env:
-          SDK_ROOT: /opt/android-sdk
-        run: |
-          sudo mkdir -p $SDK_ROOT/cmdline-tools
-          sudo chown -R $USER:$USER $SDK_ROOT
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
-          unzip -q cmdtools.zip -d $SDK_ROOT/cmdline-tools
-          mv $SDK_ROOT/cmdline-tools/cmdline-tools $SDK_ROOT/cmdline-tools/tools
-
-          # Accept licenses and install components using Java 17
-          yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT --licenses
-          yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT \
-            "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.1.7779620"
 
       - name: Build APK (debug, verbose)
         env:
-          # Keep existing PATH; just append Android tools
-          GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx3g -Dfile.encoding=UTF-8"
+          BUILDOZER_WARN_ON_ROOT: "0"
         run: |
-          export ANDROIDSDK=/opt/android-sdk
-          export ANDROID_HOME=$ANDROIDSDK
-          export ANDROID_SDK_ROOT=$ANDROIDSDK
-          export ANDROIDNDK=$ANDROIDSDK/ndk/23.1.7779620
-          export ANDROID_NDK_HOME=$ANDROIDNDK
-          export PATH=$PATH:/opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/33.0.2
+          # Clean any previous partial build (optional but keeps CI fresh)
+          rm -rf .buildozer bin || true
+          # Build with verbose output
+          buildozer -v android debug
 
-          which git && git --version
-          which buildozer
-
-          # Build very verbose so the real error shows in buildozer.log
-          buildozer -v android debug || true
-
-          # Show last 200 lines of the main log right in the job output
-          echo "---------- tail .buildozer/buildozer.log ----------" || true
-          tail -n 200 .buildozer/buildozer.log || true
-
-          # Fail the step if the APK wasn't produced
-          test -f bin/*.apk
-
-      # Always collect logs to diagnose quickly
-      - name: Upload build logs
+      # Always upload logs so we can diagnose if anything fails
+      - name: Upload Buildozer logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -96,7 +43,6 @@ jobs:
             .buildozer/buildozer.log
             .buildozer/android/**/*.log
             .buildozer/android/**/*.txt
-            .buildozer/android/platform/**/logs/**/*
 
       - name: Upload APK
         if: success()
