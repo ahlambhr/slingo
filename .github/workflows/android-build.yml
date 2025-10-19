@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK (Docker)
 
 on:
   workflow_dispatch:
@@ -6,35 +6,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
-    # Use the prebuilt Buildozer image (Android SDK/NDK already inside)
-    container:
-      image: kivy/buildozer:stable
-      options: --privileged
+    timeout-minutes: 120
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install essentials inside container
+      - name: Show Docker info
         run: |
-          apt-get update
-          apt-get install -y git zip unzip
-          git --version
-          python3 --version
-          buildozer --version
+          docker --version
+          docker info
 
-      - name: Build APK (debug, verbose)
+      - name: Build APK inside the official buildozer image
         env:
           BUILDOZER_WARN_ON_ROOT: "0"
         run: |
-          # Clean any previous partial build (optional but keeps CI fresh)
+          # Clean old artifacts
           rm -rf .buildozer bin || true
-          # Build with verbose output
-          buildozer -v android debug
+          # Run build in container; mount the repo into /home/user/app
+          docker run --rm \
+            -e BUILDOZER_WARN_ON_ROOT=0 \
+            -v "$PWD":/home/user/app \
+            -w /home/user/app \
+            kivy/buildozer:stable \
+            bash -lc "apt-get update && apt-get install -y git zip unzip && buildozer -v android debug"
 
-      # Always upload logs so we can diagnose if anything fails
-      - name: Upload Buildozer logs
+      # Always grab logs so we can diagnose anything quickly
+      - name: Upload build logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
