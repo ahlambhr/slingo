@@ -11,8 +11,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Use Java 17 so sdkmanager works (fixes class file 61.0 error)
+      # Java 17 is required by new Android cmdline-tools/Gradle
       - name: Set up Java 17
+        id: java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -39,7 +40,8 @@ jobs:
       - name: Install Buildozer & python-for-android
         run: |
           python -m pip install --upgrade pip
-          pip install "cython<3.0" virtualenv
+          # Pin toolchain pieces that sometimes break CI
+          pip install "Cython<3.0" "wheel>=0.41" "setuptools<70" "packaging<24"
           pip install buildozer
           pip install "python-for-android==2024.1.21"
           buildozer --version
@@ -53,26 +55,38 @@ jobs:
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
           unzip -q cmdtools.zip -d $SDK_ROOT/cmdline-tools
           mv $SDK_ROOT/cmdline-tools/cmdline-tools $SDK_ROOT/cmdline-tools/tools
+
+          # Accept licenses and install components using Java 17
           yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT --licenses
           yes | $SDK_ROOT/cmdline-tools/tools/bin/sdkmanager --sdk_root=$SDK_ROOT \
             "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.1.7779620"
 
       - name: Build APK (debug, verbose)
+        env:
+          # Keep existing PATH; just append Android tools
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx3g -Dfile.encoding=UTF-8"
         run: |
-          # Android env
           export ANDROIDSDK=/opt/android-sdk
           export ANDROID_HOME=$ANDROIDSDK
           export ANDROID_SDK_ROOT=$ANDROIDSDK
           export ANDROIDNDK=$ANDROIDSDK/ndk/23.1.7779620
           export ANDROID_NDK_HOME=$ANDROIDNDK
           export PATH=$PATH:/opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/33.0.2
-          # Sanity checks
+
           which git && git --version
           which buildozer
-          # Build with verbose logs
-          buildozer -v android debug
 
-      # Always collect logs to diagnose anything quickly
+          # Build very verbose so the real error shows in buildozer.log
+          buildozer -v android debug || true
+
+          # Show last 200 lines of the main log right in the job output
+          echo "---------- tail .buildozer/buildozer.log ----------" || true
+          tail -n 200 .buildozer/buildozer.log || true
+
+          # Fail the step if the APK wasn't produced
+          test -f bin/*.apk
+
+      # Always collect logs to diagnose quickly
       - name: Upload build logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -80,11 +94,9 @@ jobs:
           name: buildozer-logs
           path: |
             .buildozer/buildozer.log
-            .buildozer/android/platform/*/*/*/logs/**/*
-            .buildozer/android/platform/*/build-*/logs/**/*
-            .buildozer/android/platform/build-*/logs/**/*
-            .buildozer/android/*.txt
             .buildozer/android/**/*.log
+            .buildozer/android/**/*.txt
+            .buildozer/android/platform/**/logs/**/*
 
       - name: Upload APK
         if: success()
